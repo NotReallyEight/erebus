@@ -187,12 +187,15 @@ export class Client extends EventEmitter {
 						}
 						break;
 					default:
-						console.log(`Unknown opcode: ${(payload as { op: number }).op}`);
+						this.emit(
+							"warn",
+							`Unknown opcode: ${(payload as { op: number }).op}`
+						);
 						break;
 				}
 			});
 		} else if (this.status === ClientStatus.Connected)
-			throw new Error("Already connected");
+			this.emit("error", new Error("Already connected"));
 		else {
 			this.ws = new WebSocket(await this.getGatewayUrl());
 			this.ws.on("open", () => {
@@ -291,8 +294,11 @@ export class Client extends EventEmitter {
 	/**
 	 * Send an identify payload
 	 */
-	private _identify(presence?: GatewayPresenceUpdateData) {
-		if (this.token == null) throw new Error("Cannot identify without a token");
+	private _identify(presence?: GatewayPresenceUpdateData): void {
+		if (this.token == null) {
+			this.emit("error", new Error("Cannot identify without a token"));
+			return;
+		}
 		const payload: GatewayIdentify = {
 			op: GatewayOpcodes.Identify,
 			d: {
@@ -308,18 +314,26 @@ export class Client extends EventEmitter {
 			},
 		};
 
-		if (!this.ws) throw new Error("No websocket available");
+		if (!this.ws) {
+			this.emit("error", new Error("No websocket available"));
+			return;
+		}
 		this.ws.send(JSON.stringify(payload));
 	}
 
 	/**
 	 * Send a resume payload
 	 */
-	private _resume() {
-		if (this.token == null || this.sessionId == null || this.seq == null)
-			throw new Error(
-				"Cannot resume without a token, session ID and sequence number"
+	private _resume(): void {
+		if (this.token == null || this.sessionId == null || this.seq == null) {
+			this.emit(
+				"error",
+				new Error(
+					"Cannot resume without a token, session ID and sequence number"
+				)
 			);
+			return;
+		}
 		const resumePayload: GatewayResume = {
 			op: GatewayOpcodes.Resume,
 			d: {
@@ -330,7 +344,7 @@ export class Client extends EventEmitter {
 		};
 		this.status = ClientStatus.Resuming;
 		if (this.ws) this.ws.send(JSON.stringify(resumePayload));
-		else throw new Error("Cannot resume without a WebSocket");
+		else this.emit("error", new Error("Cannot resume without a WebSocket"));
 	}
 
 	/**
@@ -343,7 +357,11 @@ export class Client extends EventEmitter {
 		};
 		this.heartbeatInfo.acknowledged = false;
 		if (this.ws) this.ws.send(JSON.stringify(heartbeat));
-		else throw new Error("Cannot send heartbeat without a WebSocket");
+		else
+			this.emit(
+				"error",
+				new Error("Cannot send heartbeat without a WebSocket")
+			);
 	}
 }
 
