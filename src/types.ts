@@ -14,6 +14,7 @@ import type {
 	APIRequest,
 	Base,
 	NewsChannel,
+	PrivateChannel,
 	StageChannel,
 	StoreChannel,
 	TextChannel,
@@ -372,3 +373,8 @@ export type AnyGuildChannel =
 	| StoreChannel
 	| TextChannel
 	| VoiceChannel;
+
+/**
+ * Type definition for all channel classes
+ */
+export type AnyChannel = AnyGuildChannel | PrivateChannel;
