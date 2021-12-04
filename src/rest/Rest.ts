@@ -27,9 +27,9 @@ export class Rest {
 	invalidRequests = 0;
 
 	/**
-	 * When the invalid requests were last resetted
+	 * When the invalid requests were last reset
 	 */
-	invalidRequestsResettedAt = Date.now();
+	invalidRequestsResetAt = Date.now();
 
 	/**
 	 * A queue for the requests
@@ -52,9 +52,9 @@ export class Rest {
 	requestsPerSec = 0;
 
 	/**
-	 * When the requests per second were last resetted
+	 * When the requests per second were last reset
 	 */
-	requestPerSecResettedAt = Date.now();
+	requestPerSecResetAt = Date.now();
 
 	/**
 	 * @param client - The client that instantiated this
@@ -65,13 +65,13 @@ export class Rest {
 		// Reset the request per second every second
 		setInterval(() => {
 			this.requestsPerSec = 0;
-			this.requestPerSecResettedAt = Date.now();
+			this.requestPerSecResetAt = Date.now();
 		}, 1_000).unref();
 
-		// Resey invalid requests every 10 minutes
+		// Reset invalid requests every 10 minutes
 		setInterval(() => {
 			this.invalidRequests = 0;
-			this.invalidRequestsResettedAt = Date.now();
+			this.invalidRequestsResetAt = Date.now();
 		}, 600_000).unref();
 	}
 
@@ -252,7 +252,7 @@ export class Rest {
 		this.queue.shift();
 		if (data !== undefined) return data;
 
-		// If we didn't receive a succesful response, throw an error
+		// If we didn't receive a successful response, throw an error
 		throw new DiscordError(request, res);
 	}
 
@@ -316,9 +316,9 @@ export class Rest {
 	wait({ method, route }: { method: RequestMethod; route: `/${string}` }) {
 		const promises: Promise<void>[] = [];
 		const requestsPerSecWillResetIn =
-			this.requestPerSecResettedAt + 1_000 - Date.now();
+			this.requestPerSecResetAt + 1_000 - Date.now();
 		const invalidRequestsWillResetIn =
-			this.invalidRequestsResettedAt + 600_000 - Date.now();
+			this.invalidRequestsResetAt + 600_000 - Date.now();
 		const rHandler = this.rateLimits.find((handler) =>
 			handler.routes.includes(`${method} ${route}`)
 		);
